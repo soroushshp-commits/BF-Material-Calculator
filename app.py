@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 
 # Set up page configuration for a modern, wide layout
-st.set_page_config(page_title="Blast Furnace Slag App V2.0", layout="wide")
+st.set_page_config(page_title="Blast Furnace Slag App", layout="wide")
 
-st.title("Blast Furnace Slag Prediction Application (V2.0)")
+st.title("Blast Furnace Slag Prediction Application")
 st.markdown("Enter your raw input data below. Calculations update automatically based on your new Pig Iron inputs.")
 
 # ==========================================
@@ -149,7 +149,7 @@ bi4_real = (total_input["CaO"] + total_input["MgO"]) / (total_input["SiO₂"] + 
 # 3. RESULTS DISPLAY
 # ==========================================
 st.write("---")
-st.header("📊 V2.0 Calculation Results")
+st.header("📊 Calculation Results")
 
 # Display key efficiency stats metrics
 m_col1, m_col2, m_col3, m_col4 = st.columns(4)
