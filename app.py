@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 
 # Set up page configuration for a modern, wide layout
-st.set_page_config(page_title="Blast Furnace Slag App V2.0", layout="wide")
+st.set_page_config(page_title="Blast Furnace Slag App", layout="wide")
 
-st.title("Blast Furnace Slag Prediction Application (V2.0)")
+st.title("Blast Furnace Slag Prediction Application")
 st.markdown("Enter your raw input data below. Calculations update automatically based on your new Pig Iron inputs.")
 
 # ==========================================
@@ -153,13 +153,13 @@ bi4_real = (total_input["CaO"] + total_input["MgO"]) / (total_input["SiO₂"] + 
 # 3. RESULTS DISPLAY
 # ==========================================
 st.write("---")
-st.header("📊 V2.0 Calculation Results")
+st.header("📊 Calculation Results")
 
 # Display key efficiency stats metrics
 m_col1, m_col2, m_col3, m_col4 = st.columns(4)
 m_col1.metric("Fe in 1000kg Burden", f"{round(e2_fe_1000kg, 2)} kg")
 m_col2.metric("Fe After Recovery", f"{round(e3_fe_available, 2)} kg")
-m_col3.metric("Cast Iron Produced", f"{round(e4_tonnage_cast_iron, 2)} kg")
+m_col3.metric("Fe in 1000kg Hot Metal", f"{round(e4_tonnage_cast_iron, 2)} kg")
 m_col4.metric("Iron Burden Required", f"{round(e5_iron_burden_req, 2)} kg/tHM")
 
 st.markdown("#### Basicity Verifications")
@@ -190,4 +190,4 @@ adj_col1, adj_col2, adj_col3, adj_col4 = st.columns(4)
 adj_col1.metric("CaO Target to Basicity [X1]", f"{round(x1_cao_target, 2)} kg")
 adj_col2.metric("CaO Required Correction [X2]", f"{round(x2_cao_required, 2)} kg")
 adj_col3.metric("Total Slag (kg/tHM) [X3]", f"{round(x3_total_slag, 2)} kg")
-adj_col4.metric("Slag After Correction [X4]", f"{round(x4_total_slag_corrected, 2)} kg")
+adj_col4.metric("Slag After Correction (kg/tHM) [X4]", f"{round(x4_total_slag_corrected, 2)} kg")
