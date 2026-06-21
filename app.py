@@ -34,12 +34,11 @@ st.subheader("Composition Matrix Inputs")
 col_tbl1, col_tbl2, col_tbl3 = st.columns(3)
 
 # --- Table 1: Ferrous Material Compositions ---
-# Maintained full table for background weighted average calculations
-ferrous_elements = ["Fe", "FeO", "SiO₂", "CaO", "MgO", "Al₂O₃", "MnO", "TiO₂", "P", "S", "K₂O", "Na₂O"]
+ferrous_elements = ["Fe", "FeO", "SiO₂", "CaO", "MgO", "Al₂O₃", "MnO", "TiO₂", "P", "S", "K₂O", "Na₂O", "Fe₂O₃"]
 default_ferrous_data = {
-    "Pellet (B)": [63.0, 1.0, 5.0, 1.2, 0.4, 1.5, 0.05, 0.1, 0.03, 0.01, 0.04, 0.02],
-    "Sinter (C)": [56.0, 8.5, 5.5, 10.2, 2.5, 1.8, 0.20, 0.15, 0.05, 0.02, 0.06, 0.03],
-    "Iron Ore (D)": [62.0, 0.0, 4.5, 0.5, 0.2, 2.0, 0.08, 0.08, 0.04, 0.01, 0.05, 0.02]
+    "Pellet (B)": [63.0, 1.0, 5.0, 1.2, 0.4, 1.5, 0.05, 0.1, 0.03, 0.01, 0.04, 0.02, 0.50],
+    "Sinter (C)": [56.0, 8.5, 5.5, 10.2, 2.5, 1.8, 0.20, 0.15, 0.05, 0.02, 0.06, 0.03, 1.00],
+    "Iron Ore (D)": [62.0, 0.0, 4.5, 0.5, 0.2, 2.0, 0.08, 0.08, 0.04, 0.01, 0.05, 0.02, 0.50]
 }
 df_ferrous_input = pd.DataFrame(default_ferrous_data, index=ferrous_elements)
 
@@ -58,7 +57,7 @@ with col_tbl2:
     st.write("**Coke Ash Analysis (%)**")
     edited_coke = st.data_editor(df_coke_input, use_container_width=True)
 
-# --- Table 3: NEW Pig Iron Analysis ---
+# --- Table 3: Pig Iron Analysis ---
 pig_iron_elements = ["Fe", "Si", "Mn", "S", "P", "Ti", "Al"]
 default_pig_iron_data = {
     "Pig Iron % [V]": [94.0, 0.50, 0.20, 0.03, 0.05, 0.02, 0.10]
@@ -101,36 +100,41 @@ e4_tonnage_cast_iron = fe_in_pig_iron * 1000 / 100
 denominator = (iron_recovery / 100) * (b3_weighted_fe / 100)
 e5_iron_burden_req = e4_tonnage_cast_iron / denominator if denominator != 0 else 0.0
 
-# --- Source 4 & 6: Main 4 Oxides from Ferrous and Coke ---
-target_oxides = ["SiO₂", "CaO", "MgO", "Al₂O₃"]
+# --- Source 4 & 6: Oxides from Ferrous and Coke ---
 ferrous_oxides_kg = {}
 coke_oxides_kg = {}
 
 n1_coke_ash_content = (coke_rate * coke_ash_content) / 100
 
-for ox in target_oxides:
+# Loop through all 11 oxides required in the final output
+for ox in coke_elements:
+    # Source 4 Calculation (Ferrous)
     ferrous_oxides_kg[ox] = (weighted_avg[ox] / 100) * e5_iron_burden_req
+    
+    # Source 6 Calculation (Coke)
     coke_oxides_kg[ox] = (n1_coke_ash_content * edited_coke.loc[ox, "Ash % [P]"]) / 100
 
 # --- Source 7: Blast furnace slag prediction analysis (With Pig Iron Corrections) ---
 total_input = {}
 
-# SiO2: Sum of inputs MINUS Si absorbed into Pig Iron
-pig_iron_si = edited_pig_iron.loc["Si", "Pig Iron % [V]"]
-si_correction = 1000 * ((pig_iron_si / 100) / 0.4674)
-total_input["SiO₂"] = coke_oxides_kg["SiO₂"] + ferrous_oxides_kg["SiO₂"] - si_correction
-
-# CaO and MgO (No corrections needed)
-total_input["CaO"] = coke_oxides_kg["CaO"] + ferrous_oxides_kg["CaO"]
-total_input["MgO"] = coke_oxides_kg["MgO"] + ferrous_oxides_kg["MgO"]
-
-# Al2O3: Sum of inputs MINUS Al absorbed into Pig Iron
-pig_iron_al = edited_pig_iron.loc["Al", "Pig Iron % [V]"]
-al_correction = 1000 * ((pig_iron_al / 100) / 0.5293)
-total_input["Al₂O₃"] = coke_oxides_kg["Al₂O₃"] + ferrous_oxides_kg["Al₂O₃"] - al_correction
+for ox in coke_elements:
+    total_val = coke_oxides_kg[ox] + ferrous_oxides_kg[ox]
+    
+    # Apply Pig Iron Corrections
+    if ox == "SiO₂":
+        pig_iron_si = edited_pig_iron.loc["Si", "Pig Iron % [V]"]
+        si_correction = 1000 * ((pig_iron_si / 100) / 0.4674)
+        total_val -= si_correction
+        
+    elif ox == "Al₂O₃":
+        pig_iron_al = edited_pig_iron.loc["Al", "Pig Iron % [V]"]
+        al_correction = 1000 * ((pig_iron_al / 100) / 0.5293)
+        total_val -= al_correction
+        
+    total_input[ox] = total_val
 
 # --- Source 8: Targets and Totals ---
-# X3: Total Slag (Sum of T3:T6)
+# X3: Total Slag (Sum of all 11 oxides)
 x3_total_slag = sum(total_input.values())
 
 # X1 & X2: Basicity Target adjustments
@@ -165,14 +169,14 @@ b_col2.metric("Sinter B.I. 4", f"{round(sinter_bi4, 3)}")
 b_col3.metric("Real Slag B.I. 2", f"{round(bi2_real, 3)}")
 b_col4.metric("Real Slag B.I. 4", f"{round(bi4_real, 3)}")
 
-# Generate Output Slag Dataframe (V2.0 - 4 Primary Oxides Only)
+# Generate Output Slag Dataframe (All 11 Oxides with kg and %)
 slag_table_rows = []
 for oxide, total_wt in total_input.items():
     contribution_pct = (total_wt / x3_total_slag) * 100 if x3_total_slag != 0 else 0.0
     slag_table_rows.append({
         "Oxide": oxide,
-        "Total Input (kg)": round(total_wt, 2),
-        "Contribution to final slag weight (%)": round(contribution_pct, 2)
+        "Total Input (kg)": round(total_wt, 3),
+        "Contribution of each to the final slag weight (%)": round(contribution_pct, 2)
     })
 
 df_final_slag = pd.DataFrame(slag_table_rows)
