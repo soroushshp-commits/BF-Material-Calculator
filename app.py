@@ -155,7 +155,7 @@ st.header("📊 V2.0 Calculation Results")
 m_col1, m_col2, m_col3, m_col4 = st.columns(4)
 m_col1.metric("Fe in 1000kg Burden", f"{round(e2_fe_1000kg, 2)} kg")
 m_col2.metric("Fe After Recovery", f"{round(e3_fe_available, 2)} kg")
-m_col3.metric("Cast Iron Produced", f"{round(e4_tonnage_cast_iron, 2)} kg")
+m_col3.metric("Fe in 1000kg Hot Metal", f"{round(e4_tonnage_cast_iron, 2)} kg")
 m_col4.metric("Iron Burden Required", f"{round(e5_iron_burden_req, 2)} kg/tHM")
 
 st.markdown("#### Basicity Verifications")
